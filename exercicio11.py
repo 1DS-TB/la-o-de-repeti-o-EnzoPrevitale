@@ -12,23 +12,23 @@ entidade = {
         "dano": 0,
         "itens": {
             "Poção de Força": 2,
-            "Poção de Regeneração": 1,
+            "Poção de Regeneração": 2,
             "Poção de Fraqueza": 2,
-            "Poção de Dano Crítico": 2,
+            "Poção de Confusão": 2,
             "Frasco de Veneno": 2,
         },
         "turnos": {
             "força": 0,
             "regeneração": 0,
             "fraqueza": 0,
-            "dano crítico": 0,
+            "confusão": 0,
             "veneno": 0
         },
         "efeitos": {
             "Poção de Força": False,
             "Poção de Regeneração": False,
             "Poção de Fraqueza": False,
-            "Poção de Dano Crítico": False,
+            "Poção de Confusão": False,
             "Frasco de Veneno": False
         }
     },
@@ -42,21 +42,21 @@ entidade = {
             "Poção de Força": 2,
             "Poção de Regeneração": 1,
             "Poção de Fraqueza": 2,
-            "Poção de Dano Crítico": 2,
+            "Poção de Confusão": 2,
             "Frasco de Veneno": 2,
         },
         "turnos": {
-            "Poção de Força": 0,
-            "Poção de Regeneração": 0,
-            "Poção de Fraqueza": 0,
-            "Poção de Dano Crítico": 0,
-            "Frasco de Veneno": 0
+            "força": 0,
+            "regeneração": 0,
+            "fraqueza": 0,
+            "confusão": 0,
+            "veneno": 0
         },
         "efeitos": {
             "Poção de Força": False,
             "Poção de Regeneração": False,
             "Poção de Fraqueza": False,
-            "Poção de Dano Crítico": False,
+            "Poção de Confusão": False,
             "Frasco de Veneno": False
         }
     }
@@ -81,10 +81,13 @@ print(f"""
     Ataque: {entidade["inimigo"]["ataque"]} | Defesa: {entidade["inimigo"]["defesa"]}
     """)
 
-while entidade["jogador"]["vida"] > 0 and entidade["inimigo"]["vida"] > 0:
-    entidade["jogador"]["dano"] = entidade["jogador"]["ataque"] - entidade["inimigo"]["defesa"]
-    entidade["inimigo"]["dano"] = entidade["inimigo"]["ataque"] - entidade["jogador"]["defesa"]
+entidade["jogador"]["dano"] = entidade["jogador"]["ataque"] - entidade["inimigo"]["defesa"]
+entidade["inimigo"]["dano"] = entidade["inimigo"]["ataque"] - entidade["jogador"]["defesa"]
 
+entidade["jogador"]["dano_base"] = entidade["jogador"]["dano"]
+entidade["inimigo"]["dano_base"] = entidade["inimigo"]["dano"]
+
+while entidade["jogador"]["vida"] > 0 and entidade["inimigo"]["vida"] > 0:
     print(f"""
     --- TURNO {turno}     ---
     JOGADOR: {entidade["jogador"]["vida"]} | INIMIGO | {entidade["inimigo"]["vida"]}
@@ -110,7 +113,7 @@ while entidade["jogador"]["vida"] > 0 and entidade["inimigo"]["vida"] > 0:
             entidade["jogador"]["vida"] = vida_maxima
         cura = entidade["jogador"]["vida"] - vida_anterior
         print(f"O jogador se cura! Ganha {cura} de vida.")
-    elif escolha == '3':
+    elif escolha == '3': # Abrir mochila
         itens_utilizaveis = []
         for i in entidade["jogador"]["itens"]:
             if entidade["jogador"]["itens"][i] > 0:
@@ -125,7 +128,7 @@ while entidade["jogador"]["vida"] > 0 and entidade["inimigo"]["vida"] > 0:
         # Aplicando efeitos
         if not entidade["jogador"]["efeitos"][item_escolhido]:
             entidade["jogador"]["efeitos"][item_escolhido] = True
-            entidade["jogador"]["dano"] *= 2
+            print(f"O jogador utiliza {item_escolhido}!")
             entidade["jogador"]["itens"][item_escolhido] -= 1
 
     # Acao do entidade["inimigo"]
@@ -148,12 +151,55 @@ while entidade["jogador"]["vida"] > 0 and entidade["inimigo"]["vida"] > 0:
 
     escolha = ''
 
+    # Contando os turnos com o efeito de força
     if entidade["jogador"]["efeitos"]["Poção de Força"]:
         entidade["jogador"]["turnos"]["força"] += 1
-        if entidade["jogador"]["turnos"]["força"] >= 2:
+        entidade["jogador"]["dano"] = entidade["jogador"]["dano_base"] * 2
+        # Retirando efeito de força
+        if entidade["jogador"]["turnos"]["força"] >= 3:
             entidade["jogador"]["efeitos"]["Poção de Força"] = False
-            entidade["jogador"]["dano"] /= 2
-    print(entidade["jogador"]["dano"])
+            entidade["jogador"]["dano"] = entidade["jogador"]["dano_base"]
+            print("O efeito da poção de força do jogador acabou.")
+
+    # Aplicando efeito de regeneração
+    if entidade["jogador"]["efeitos"]["Poção de Regeneração"]:
+        entidade["jogador"]["vida"] += vida_maxima // 20 if entidade["jogador"]["vida"] < vida_maxima else 0
+        entidade["jogador"]["turnos"]["regeneração"] += 1
+        # Retirando efeito de regeneração
+        if entidade["jogador"]["turnos"]["regeneração"] >= 6:
+            entidade["jogador"]["efeitos"]["Poção de Regeneração"] = False
+            print("O efeito da poção de regeneração do jogador acabou.")
+
+        # Aplicando efeito de fraqueza
+    if entidade["jogador"]["efeitos"]["Poção de Fraqueza"]:
+        entidade["inimigo"]["dano"] = entidade["inimigo"]["dano_base"] // 2
+        entidade["jogador"]["turnos"]["fraqueza"] += 1
+        # Retirando efeito de fraqueza
+        if entidade["jogador"]["turnos"]["fraqueza"] >= 3:
+            entidade["jogador"]["efeitos"]["Poção de Fraqueza"] = False
+            entidade["inimigo"]["dano"] = entidade["inimigo"]["dano_base"]
+            print("O efeito da poção de fraqueza do jogador acabou.")
+
+        # Aplicando efeito de confusão
+    if entidade["jogador"]["efeitos"]["Poção de Confusão"]:
+        entidade["inimigo"]["dano"] = 0
+        entidade["jogador"]["turnos"]["confusão"] += 1
+         # Retirando efeito de confusão
+        if entidade["jogador"]["turnos"]["confusão"] >= 2:
+            entidade["inimigo"]["dano"] = entidade["inimigo"]["dano_base"]
+            entidade["jogador"]["efeitos"]["Poção de Confusão"] = False
+            print("O efeito da poção de confusão do jogador acabou.")
+
+    # Aplicando efeito de envenenamento
+    if entidade["jogador"]["efeitos"]["Frasco de Veneno"]:
+        entidade["inimigo"]["vida"] -= vida_maxima//50
+        entidade["jogador"]["turnos"]["veneno"] += 1
+        # Retirando efeito de envenenamento
+        if entidade["jogador"]["turnos"]["veneno"] >= 6:
+            entidade["jogador"]["efeitos"]["Frasco de Veneno"] = False
+            print("O efeito do frasco de veneno do jogador acabou.")
+
+
     turno += 1
 else:
     if entidade["jogador"]["vida"] <= 0:
