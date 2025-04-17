@@ -14,23 +14,20 @@ entidade = {
             "Poção de Força": 2,
             "Poção de Regeneração": 2,
             "Poção de Fraqueza": 2,
-            "Poção de Confusão": 2,
             "Frasco de Veneno": 2,
         },
         "turnos": {
             "força": 0,
             "regeneração": 0,
             "fraqueza": 0,
-            "confusão": 0,
             "veneno": 0
         },
         "efeitos": {
             "Poção de Força": False,
             "Poção de Regeneração": False,
             "Poção de Fraqueza": False,
-            "Poção de Confusão": False,
             "Frasco de Veneno": False
-        }
+        },
     },
 
     "inimigo": {
@@ -42,21 +39,18 @@ entidade = {
             "Poção de Força": 2,
             "Poção de Regeneração": 1,
             "Poção de Fraqueza": 2,
-            "Poção de Confusão": 2,
             "Frasco de Veneno": 2,
         },
         "turnos": {
             "força": 0,
             "regeneração": 0,
             "fraqueza": 0,
-            "confusão": 0,
             "veneno": 0
         },
         "efeitos": {
             "Poção de Força": False,
             "Poção de Regeneração": False,
             "Poção de Fraqueza": False,
-            "Poção de Confusão": False,
             "Frasco de Veneno": False
         }
     }
@@ -69,9 +63,23 @@ while entidade["inimigo"]["ataque"] <= entidade["jogador"]["defesa"]:
 
 cura_maxima = vida_maxima // 20
 
-print(f"""
-    === JOGO DO BALACOBACO ===
+multiplayer = input("""
+=== JOGO DO BALACOBACO ===
+[1] Um jogador | [2] Multijogadoor
+""")
 
+while multiplayer != '1' and multiplayer != '2':
+    multiplayer = input("""
+    === JOGO DO BALACOBACO ===
+    [1] Um jogador | [2] Multijogadoor
+    """)
+else:
+    if multiplayer == '1':
+        multiplayer = False
+    elif multiplayer == '2':
+        multiplayer = True
+
+print(f"""
     === JOGADOR            ===
     Vida: {entidade["jogador"]["vida"]}
     Ataque: {entidade["jogador"]["ataque"]} | Defesa: {entidade["jogador"]["defesa"]}
@@ -131,23 +139,59 @@ while entidade["jogador"]["vida"] > 0 and entidade["inimigo"]["vida"] > 0:
             print(f"O jogador utiliza {item_escolhido}!")
             entidade["jogador"]["itens"][item_escolhido] -= 1
 
-    # Acao do entidade["inimigo"]
-    escolha = random.choice(['1', '2'])
-    if escolha == '1': # Inimigo ataca
-        critico = random.randint(1, 10) == 10
-        if not critico:
-            entidade["jogador"]["vida"] -= entidade["inimigo"]["dano"]
-        else:
-            entidade["jogador"]["vida"] -= 2 * entidade["inimigo"]["dano"]
-            print("O inimigo acertou um golpe critico!")
-        print(f"O inimigo ataca! Jogador perde {entidade["inimigo"]["dano"] if not critico else 2 * entidade["inimigo"]["dano"]} de vida.")
-    elif escolha == '2': # Inimigo cura
-        vida_anterior = entidade["inimigo"]["vida"]
-        entidade["inimigo"]["vida"] += cura_maxima
-        if entidade["inimigo"]["vida"] > vida_maxima:
-            entidade["inimigo"]["vida"] = vida_maxima
-        cura = entidade["inimigo"]["vida"] - vida_anterior
-        print(f"O inimigo se cura! Ganha {cura} de vida.")
+    # Singleplayer
+    if not multiplayer:
+        # Acao do entidade["inimigo"]
+        escolha = random.choice(['1', '2'])
+        if escolha == '1': # Inimigo ataca
+            critico = random.randint(1, 10) == 10
+            if not critico:
+                entidade["jogador"]["vida"] -= entidade["inimigo"]["dano"]
+            else:
+                entidade["jogador"]["vida"] -= 2 * entidade["inimigo"]["dano"]
+                print("O inimigo acertou um golpe critico!")
+            print(f"O inimigo ataca! Jogador perde {entidade["inimigo"]["dano"] if not critico else 2 * entidade["inimigo"]["dano"]} de vida.")
+        elif escolha == '2': # Inimigo cura
+            vida_anterior = entidade["inimigo"]["vida"]
+            entidade["inimigo"]["vida"] += cura_maxima
+            if entidade["inimigo"]["vida"] > vida_maxima:
+                entidade["inimigo"]["vida"] = vida_maxima
+            cura = entidade["inimigo"]["vida"] - vida_anterior
+            print(f"O inimigo se cura! Ganha {cura} de vida.")
+
+        # Multiplayer
+    elif multiplayer:
+        escolha = input("Sua vez! Deseja [1] atacar, [2] curar ou [3] abrir mochila? ")
+
+        while escolha != '1' and escolha != '2' and escolha != '3':
+            escolha = input("Sua vez! Deseja [1] atacar, [2] curar ou [3] abrir mochila? ")
+        if escolha == '1':  # Jogador ataca
+            critico = random.randint(1, 10) == 10
+            if not critico:
+                entidade["jogador"]["vida"] -= entidade["inimigo"]["dano"]
+            else:
+                entidade["jogador"]["vida"] -= 2 * entidade["inimigo"]["dano"]
+                print("Golpe critico!")
+            print(
+                f"O inimigo ataca! Jogador perde {entidade["inimigo"]["dano"] if not critico else 2 * entidade["inimigo"]["dano"]} de vida.")
+        elif escolha == '2':  # Jogador cura
+            vida_anterior = entidade["inimigo"]["vida"]
+            entidade["inimigo"]["vida"] += cura_maxima
+            if entidade["inimigo"]["vida"] > vida_maxima:
+                entidade["inimigo"]["vida"] = vida_maxima
+            cura = entidade["inimigo"]["vida"] - vida_anterior
+            print(f"O inimigo se cura! Ganha {cura} de vida.")
+        elif escolha == '3':  # Abrir mochila
+            itens_utilizaveis = []
+            for i in entidade["inimigo"]["itens"]:
+                if entidade["inimigo"]["itens"][i] > 0:
+                    itens_utilizaveis.append(i)
+            for i in range(len(itens_utilizaveis)):
+                print(f"[{i + 1}]: {itens_utilizaveis[i]} | {entidade["inimigo"]["itens"][itens_utilizaveis[i]]}")
+            item = int(input("Selecione um item: "))
+            while item <= 0 or item > len(itens_utilizaveis):
+                item = int(input("Selecione um item: "))
+            item_escolhido = itens_utilizaveis[item - 1]
 
     escolha = ''
 
@@ -163,7 +207,9 @@ while entidade["jogador"]["vida"] > 0 and entidade["inimigo"]["vida"] > 0:
 
     # Aplicando efeito de regeneração
     if entidade["jogador"]["efeitos"]["Poção de Regeneração"]:
-        entidade["jogador"]["vida"] += vida_maxima // 20 if entidade["jogador"]["vida"] < vida_maxima else 0
+        entidade["jogador"]["vida"] += vida_maxima // 20
+        if entidade["jogador"]["vida"] > vida_maxima:
+            entidade["jogador"]["vida"] = vida_maxima
         entidade["jogador"]["turnos"]["regeneração"] += 1
         # Retirando efeito de regeneração
         if entidade["jogador"]["turnos"]["regeneração"] >= 6:
@@ -179,16 +225,6 @@ while entidade["jogador"]["vida"] > 0 and entidade["inimigo"]["vida"] > 0:
             entidade["jogador"]["efeitos"]["Poção de Fraqueza"] = False
             entidade["inimigo"]["dano"] = entidade["inimigo"]["dano_base"]
             print("O efeito da poção de fraqueza do jogador acabou.")
-
-        # Aplicando efeito de confusão
-    if entidade["jogador"]["efeitos"]["Poção de Confusão"]:
-        entidade["inimigo"]["dano"] = 0
-        entidade["jogador"]["turnos"]["confusão"] += 1
-         # Retirando efeito de confusão
-        if entidade["jogador"]["turnos"]["confusão"] >= 2:
-            entidade["inimigo"]["dano"] = entidade["inimigo"]["dano_base"]
-            entidade["jogador"]["efeitos"]["Poção de Confusão"] = False
-            print("O efeito da poção de confusão do jogador acabou.")
 
     # Aplicando efeito de envenenamento
     if entidade["jogador"]["efeitos"]["Frasco de Veneno"]:
